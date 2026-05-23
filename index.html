@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Colados Simulator: Misión Caracas</title>
+    <style>
+        body { background-color: #333; color: white; text-align: center; font-family: sans-serif; margin-top: 20px; }
+        #game-board { 
+            width: 400px; height: 400px; background: #444; 
+            position: relative; margin: 0 auto; overflow: hidden; 
+            border: 5px solid #222; border-radius: 10px;
+        }
+        #player { 
+            width: 40px; height: 40px; font-size: 30px; 
+            position: absolute; bottom: 0; left: 180px; 
+            transition: 0.1s; z-index: 10;
+        }
+        .bus { 
+            width: 60px; height: 40px; font-size: 30px; 
+            position: absolute; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Colados Simulator</h1>
+    <p>Usa las flechas del teclado para cruzar la troncal sin que te pise el Transmilenio (🚌)</p>
+    
+    <div id="game-board">
+        <div id="player">🧍</div>
+    </div>
+    
+    <form id="formulario" action="logica.php" method="POST" style="display:none;">
+        <input type="number" id="puntaje" name="puntaje">
+    </form>
+
+    <script>
+        const player = document.getElementById('player');
+        const board = document.getElementById('game-board');
+        let playerX = 180;
+        let playerY = 360;
+        let score = 0;
+        let buses = [];
+
+        // Controles del jugador
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' && playerY > 0) playerY -= 40;
+            if (e.key === 'ArrowDown' && playerY < 360) playerY += 40;
+            if (e.key === 'ArrowLeft' && playerX > 0) playerX -= 40;
+            if (e.key === 'ArrowRight' && playerX < 360) playerX += 40;
+            
+            player.style.top = playerY + 'px';
+            player.style.left = playerX + 'px';
+
+            // Si cruza la calle entera (llega arriba)
+            if (playerY === 0) {
+                score++;
+                playerY = 360; // Vuelve al inicio
+                player.style.top = playerY + 'px';
+            }
+        });
+
+        // Generador de Transmilenios
+        setInterval(() => {
+            let bus = document.createElement('div');
+            bus.className = 'bus';
+            bus.innerText = '🚌';
+            bus.style.top = (Math.floor(Math.random() * 8 + 1) * 40) + 'px'; // Carril aleatorio
+            bus.style.left = '-60px'; // Sale desde la izquierda
+            board.appendChild(bus);
+            buses.push({ el: bus, x: -60, y: parseInt(bus.style.top) });
+        }, 800); // Sale un bus cada 0.8 segundos
+
+        // Motor del juego: Mover buses y detectar choques
+        setInterval(() => {
+            for (let i = 0; i < buses.length; i++) {
+                buses[i].x += 15; // Velocidad del bus
+                buses[i].el.style.left = buses[i].x + 'px';
+
+                // Si te pisa el bus (Colisión)
+                if (Math.abs(buses[i].x - playerX) < 30 && Math.abs(buses[i].y - playerY) < 30) {
+                    alert("¡Te arrolló el ruta fácil! Puntaje: " + score);
+                    document.getElementById('puntaje').value = score;
+                    document.getElementById('formulario').submit(); // Envía al PHP
+                }
+            }
+        }, 50);
+    </script>
+</body>
+</html>
