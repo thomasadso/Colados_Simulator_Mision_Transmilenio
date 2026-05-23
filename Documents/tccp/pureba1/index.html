@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Colados Simulator: Misión Bogotá</title>
+    <style>
+        body { background-color: #2c3e50; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
+        h1 { margin-bottom: 10px; }
+        #game-board { 
+            width: 400px; height: 400px; position: relative; margin: 0 auto; overflow: hidden; 
+            border: 5px solid #000; border-radius: 10px;
+            background: linear-gradient(to bottom, #7f8c8d 0px, #7f8c8d 50px, #34495e 50px, #34495e 150px, #f1c40f 150px, #f1c40f 160px, #2c3e50 160px, #2c3e50 350px, #95a5a6 350px, #95a5a6 400px);
+        }
+        #player { 
+            width: 20px; height: 20px; background-color: #2ecc71; border-radius: 50%; 
+            position: absolute; bottom: 10px; left: 190px; transition: 0.1s; z-index: 10; border: 2px solid #fff;
+        }
+        .particular { width: 45px; height: 25px; background-color: #2980b9; border-radius: 5px; position: absolute; }
+        .moto { width: 20px; height: 10px; background-color: #e67e22; border-radius: 3px; position: absolute; }
+        .transmilenio { width: 100px; height: 30px; background-color: #c0392b; position: absolute; border-radius: 3px; border-left: 45px solid #c0392b; border-right: 45px solid #c0392b; background-color: #555; }
+    </style>
+</head>
+<body>
+    <h1>Colados Simulator</h1>
+    <p>¡Cruza la troncal sin que te pise el Transmilenio!</p>
+    <div id="game-board"><div id="player"></div></div>
+    
+    <form id="formulario" action="logica.php" method="POST" style="display:none;"><input type="number" id="puntaje" name="puntaje"></form>
+
+    <script>
+        const player = document.getElementById('player');
+        const board = document.getElementById('game-board');
+        let pX = 190, pY = 360, score = 0, vehicles = [];
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' && pY > 0) pY -= 40;
+            if (e.key === 'ArrowDown' && pY < 360) pY += 40;
+            if (e.key === 'ArrowLeft' && pX > 0) pX -= 40;
+            if (e.key === 'ArrowRight' && pX < 360) pX += 40;
+            player.style.top = pY + 'px'; player.style.left = pX + 'px';
+            if (pY < 50) { score++; pY = 360; }
+        });
+
+        setInterval(() => {
+            let v = document.createElement('div'), carril = Math.floor(Math.random() * 8 + 1) * 40;
+            if (carril < 160) { v.className = 'transmilenio'; v.dataset.vel = 20; }
+            else if (Math.random() > 0.5) { v.className = 'particular'; v.dataset.vel = 15; }
+            else { v.className = 'moto'; v.dataset.vel = 25; }
+            v.style.top = carril + 'px'; v.style.left = '-120px';
+            board.appendChild(v);
+            vehicles.push({ el: v, x: -120, y: carril, vel: parseInt(v.dataset.vel) });
+        }, 800);
+
+        setInterval(() => {
+            vehicles.forEach((v, i) => {
+                v.x += v.vel; v.el.style.left = v.x + 'px';
+                if (Math.abs(v.x - pX) < 30 && Math.abs(v.y - pY) < 30) {
+                    document.getElementById('puntaje').value = score; document.getElementById('formulario').submit();
+                }
+                if (v.x > 400) { v.el.remove(); vehicles.splice(i, 1); }
+            });
+        }, 50);
+    </script>
+</body>
+</html>
